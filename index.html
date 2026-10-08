@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InkLens | Extreme Handwriting Digitizer</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700;800&display=swap' );
+
+    :root {
+      --bg: #08111f;
+      --panel: #101d30;
+      --panel2: #14253c;
+      --ink: #eaf2ff;
+      --muted: #91a6c5;
+      --cyan: #51e3d0;
+      --amber: #ffbd69;
+      --red: #ff7186;
+      --line: #263b58;
+      --shadow: 0 22px 70px #0005;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(
+        900px 500px at 80% -10%,
+        #143a52 0,
+        #08111f 60%
+      );
+      color: var(--ink);
+      font-family: Manrope, system-ui, sans-serif;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: auto;
+      padding: 34px 28px 60px;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 62px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border: 2px solid var(--cyan);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      font-family: "DM Mono";
+      font-size: 12px;
+      box-shadow: 0 0 26px #51e3d044;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--muted);
+      font: 12px "DM Mono";
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 46px;
+      align-items: end;
+      margin-bottom: 35px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font: 12px "DM Mono";
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 6vw, 78px);
+      line-height: 0.98;
+      letter-spacing: -0.07em;
+      margin: 14px 0 18px;
+      max-width: 760px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+      max-width: 680px;
+    }
+
+    .hero strong {
+      color: var(--ink);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      background: #0e1a2b;
+      border: 1px solid var(--line);
+      padding: 18px;
+      border-radius: 16px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 26px;
+      color: var(--cyan);
+    }
+
+    .metric span {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #11223a, #0d1829);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .side {
+      padding: 22px;
+      min-width: 0;
+      overflow: visible;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title h2 {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /*
+      Corrected upload area
+    */
+    .drop {
+      display: block;
+      width: 100%;
+      min-height: 150px;
+      padding: 26px 18px;
+      border: 1px dashed #42617e;
+      border-radius: 15px;
+      text-align: center;
+      color: var(--muted);
+      background: #0a1525;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .drop:hover {
+      border-color: var(--cyan);
+      background: #0c1c2d;
+      transform: translateY(-1px);
+    }
+
+    .drop span {
+      display: block;
+      line-height: 1.5;
+    }
+
+    .drop span:first-child {
+      font-size: 32px !important;
+      line-height: 1;
+      margin-bottom: 10px;
+      color: var(--cyan);
+    }
+
+    .drop b {
+      display: block;
+      color: var(--ink);
+      margin: 8px 0;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .drop input {
+      display: none;
+    }
+
+    .samples {
+      margin-top: 23px;
+    }
+
+    .sample {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .sample:hover {
+      border-color: var(--line);
+      background: #ffffff05;
+    }
+
+    .sample img {
+      width: 54px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .sample span {
+      font-size: 12px;
+    }
+
+    .sample small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .run {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: var(--cyan);
+      color: #06121d;
+      border-radius: 12px;
+      padding: 13px;
+      font-weight: 800;
+      margin-top: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .run:hover:not(:disabled) {
+      background: #72f1e1;
+      transform: translateY(-1px);
+    }
+
+    .run:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .main {
+      padding: 22px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 15px;
+      margin-bottom: 18px;
+    }
+
+    .status {
+      font: 12px "DM Mono";
+      color: var(--muted);
+    }
+
+    .status.ok {
+      color: var(--cyan);
+    }
+
+    .output {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .subhead {
+      color: var(--muted);
+      font: 11px "DM Mono";
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .editable {
+      width: 100%;
+      height: 270px;
+      resize: vertical;
+      background: #091321;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 16px;
+      font: 14px/1.8 "DM Mono";
+      outline: none;
+    }
+
+    .editable:focus {
+      border-color: var(--cyan);
+    }
+
+    .blocks {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: 270px;
+      overflow: auto;
+      padding-right: 3px;
+    }
+
+    .block {
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cyan);
+      border-radius: 11px;
+      padding: 12px 13px;
+      background: #0b1727;
+    }
+
+    .block.warn {
+      border-left-color: var(--amber);
+      background: #201b14;
+    }
+
+    .block.cross {
+      opacity: 0.65;
+      border-left-color: var(--red);
+    }
+
+    .block-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .block-text {
+      margin-top: 7px;
+      font: 13px/1.45 "DM Mono";
+      word-break: break-word;
+    }
+
+    .tag {
+      color: var(--cyan);
+    }
+
+    .warn .tag {
+      color: var(--amber);
+    }
+
+    .confidence {
+      font: 11px "DM Mono";
+      color: var(--muted);
+    }
+
+    .empty {
+      padding: 55px 20px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+    }
+
+    .bottom {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .info {
+      padding: 17px;
+      background: #0b1728;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+
+    .info h3 {
+      font-size: 13px;
+      margin: 0 0 8px;
+    }
+
+    .info p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: var(--cyan);
+      color: #06121d;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #ffffff55;
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        gap: 20px;
+      }
+
+      .output,
+      .bottom {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        margin-bottom: 35px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="nav">
+      <div class="brand">
+        <div class="mark">IL</div>
+        <span>INKLENS / HNX26EPS04</span>
+      </div>
+
+      <div class="pill">
+        UNCERTAINTY-FIRST OCR
+      </div>
+    </div>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">
+          Extreme handwriting digitizer
+        </div>
+
+        <h1>
+          Turn messy ink into
+          <span style="color: var(--cyan)">
+            trusted text.
+          </span>
+        </h1>
+
+        <p>
+          A jury-ready pipeline for genuinely bad handwriting:
+          <strong>layout separation</strong>,
+          dual-pass recognition, explicit review flags,
+          and a human correction loop that never hides uncertainty.
+        </p>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <b>4×</b>
+          <span>analysis stages</span>
+        </div>
+
+        <div class="metric">
+          <b>0</b>
+          <span>silent guesses</span>
+        </div>
+
+        <div class="metric">
+          <b>1-click</b>
+          <span>correction loop</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="app">
+
+      <aside class="card side">
+        <div class="section-title">
+          <h2>1 / Select evidence</h2>
+          <span class="pill" id="backendMode">CHECKING OCR</span>
+        </div>
+
+        <p class="hint">
+          Upload any image of handwriting. Tesseract runs locally; if you configure a
+          vision API, uploaded images are sent to that provider for recognition.
+        </p>
+
+        <label class="drop" id="drop" for="file">
+          <span>⌁</span>
+          <b>Drop a handwriting image</b>
+          <span>PNG, JPG, WEBP · max 12 MB</span>
+          <input id="file" type="file" accept="image/*">
+        </label>
+
+        <button class="run" id="run" disabled>
+          Run digitizer stack
+        </button>
+
+        <div class="samples">
+          <div class="section-title">
+            <h2>Hard samples</h2>
+            <span class="hint">click to load</span>
+          </div>
+
+          <div id="samplesList">
+            <div class="hint">
+              Loading samples…
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="card main">
+
+        <div class="toolbar">
+          <div>
+            <div class="section-title" style="margin: 0 0 4px">
+              <h2>2 / Inspect &amp; correct</h2>
+            </div>
+
+            <div class="status" id="status">
+              Awaiting an image
+            </div>
+          </div>
+
+          <div class="pill" id="engine">
+            Checking OCR backend…
+          </div>
+        </div>
+
+        <div class="output">
+
+          <div>
+            <div class="subhead">
+              Editable transcription
+            </div>
+
+            <textarea
+              class="editable"
+              id="output"
+              placeholder="Your reviewed text will appear here…"
+            ></textarea>
+
+            <button
+              class="run"
+              style="margin-top: 10px"
+              id="save"
+            >
+              Save reviewed corrections
+            </button>
+          </div>
+
+          <div>
+            <div class="subhead">
+              Evidence ledger
+              <span id="count"></span>
+            </div>
+
+            <div class="blocks" id="blocks">
+              <div class="empty">
+                Every region gets a confidence score,
+                reason code, and review state.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="bottom">
+
+          <div class="info">
+            <h3>Why this is safer</h3>
+
+            <p>
+              Low-consensus regions are marked
+              <b style="color: var(--amber)">
+                [REVIEW_REQUIRED]
+              </b>
+              instead of being turned into confident-looking text.
+              Crossed-out content is suppressed and margin notes remain separated.
+            </p>
+          </div>
+
+          <div class="info">
+            <h3>Research contribution</h3>
+
+            <p>
+              Compare the raw OCR signal, layout role, quality metrics,
+              and final decision per region. This makes the ablation story
+              inspectable—not a black-box accuracy claim.
+            </p>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    let selected = null;
+    let last = null;
+
+    async function loadEngineStatus() {
+      try {
+        const response = await fetch("/api/health");
+        if (!response.ok) throw new Error("Could not check OCR backend");
+        const data = await response.json();
+        const recognition = data.recognition;
+        $("backendMode").textContent = recognition.available
+          ? (recognition.remote ? "REMOTE VISION" : "LOCAL OCR")
+          : "OCR NOT READY";
+        $("engine").textContent = "ENGINE — " + recognition.engine.toUpperCase();
+        $("engine").title = recognition.message;
+      } catch (error) {
+        $("backendMode").textContent = "BACKEND OFFLINE";
+        $("engine").textContent = "OCR BACKEND UNAVAILABLE";
+      }
+    }
+
+    /*
+      Corrected upload click behavior
+    */
+    $("drop").onclick = function(event) {
+      if (event.target.id !== "file") {
+        $("file").click();
+      }
+    };
+
+    $("file").onchange = event => {
+      selected = event.target.files[0];
+
+      $("run").disabled = !selected;
+
+      $("status").textContent = selected
+        ? `Ready: ${selected.name}`
+        : "Awaiting an image";
+    };
+
+    async function loadSamples() {
+      try {
+        const response = await fetch("/api/samples");
+        const data = await response.json();
+
+        $("samplesList").innerHTML = data.samples
+          .map(sample => `
+            <div
+              class="sample"
+              data-url="${sample.url}"
+              data-name="${sample.name}"
+            >
+              <img src="${sample.url}" alt="${sample.title || sample.name}">
+
+              <span>
+                ${sample.title || sample.name}
+                <small>
+                  ${sample.description || "hard sample"}
+                </small>
+              </span>
+            </div>
+          `)
+          .join("");
+
+        document.querySelectorAll(".sample").forEach(sample => {
+          sample.onclick = async () => {
+            const response = await fetch(sample.dataset.url);
+            const blob = await response.blob();
+
+            selected = new File(
+              [blob],
+              sample.dataset.name,
+              { type: blob.type }
+            );
+
+            $("run").disabled = false;
+            $("status").textContent =
+              `Ready: ${sample.dataset.name}`;
+          };
+        });
+      } catch (error) {
+        $("samplesList").innerHTML =
+          '<div class="hint">Generate samples first.</div>';
+      }
+    }
+
+    loadSamples();
+    loadEngineStatus();
+
+    $("run").onclick = async () => {
+      if (!selected) {
+        return;
+      }
+
+      $("run").disabled = true;
+
+      $("status").innerHTML =
+        '<span class="spinner"></span> Recognizing text and checking uncertainty…';
+
+      const formData = new FormData();
+      formData.append("file", selected);
+
+      try {
+        const response = await fetch("/api/digitize", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Request failed");
+        }
+
+        last = await response.json();
+        render(last);
+
+      } catch (error) {
+        $("status").textContent = error.message;
+      } finally {
+        $("run").disabled = false;
+      }
+    };
+
+    function render(data) {
+      $("output").value = data.full_text;
+
+      $("engine").textContent =
+        "ENGINE — " + data.engine.toUpperCase();
+
+      $("status").textContent =
+        `${data.total_blocks} regions · ` +
+        `${data.flagged_blocks} review flags · ` +
+        `${data.crossed_out_blocks} crossed-out`;
+
+      $("status").className = "status ok";
+
+      $("count").textContent =
+        `(${data.total_blocks})`;
+
+      $("blocks").innerHTML = data.blocks
+        .map(block => `
+          <div class="
+            block
+            ${block.is_flagged ? "warn" : ""}
+            ${block.crossed_out ? "cross" : ""}
+          ">
+            <div class="block-top">
+              <span class="tag">
+                ${
+                  block.crossed_out
+                    ? "CROSSED OUT"
+                    : block.is_flagged
+                      ? "REVIEW REQUIRED"
+                      : "HIGH CONFIDENCE"
+                }
+                · ${block.region_type.replace("_", " ")}
+              </span>
+
+              <span class="confidence">
+                ${(block.confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+
+            <div class="block-text">
+              ${escapeHtml(block.final_text)}
+            </div>
+
+            <div class="hint" style="margin-top: 7px">
+              ${block.reasons.join(" · ")}
+            </div>
+          </div>
+        `)
+        .join("");
+    }
+
+    $("save").onclick = async () => {
+      if (!last) {
+        toast("Run an image first");
+        return;
+      }
+
+      const correctedText = $("output").value;
+
+      for (const block of last.blocks) {
+        if (block.is_flagged) {
+          const formData = new FormData();
+
+          formData.append("block_id", block.id);
+          formData.append("original_text", block.final_text);
+          formData.append("corrected_text", correctedText);
+
+          await fetch("/api/feedback", {
+            method: "POST",
+            body: formData
+          });
+        }
+      }
+
+      toast("Review saved to feedback buffer");
+    };
+
+    function toast(message) {
+      $("toast").textContent = message;
+      $("toast").style.display = "block";
+
+      setTimeout(() => {
+        $("toast").style.display = "none";
+      }, 2600);
+    }
+
+    function escapeHtml(value) {
+      return value.replace(
+        /[&<>'"]/g,
+        character => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;"
+        }[character])
+      );
+    }
+  </script>
+</body>
+</html>
