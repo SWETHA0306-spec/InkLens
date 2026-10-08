@@ -14,8 +14,12 @@ def lev(a,b):
 def cer(ref,hyp): return lev(ref,hyp)/max(1,len(ref))
 def main():
     root=Path(__file__).parent; p=ExtremeHandwritingPipeline()
+    if not p.engine_status["available"]:
+        print(p.engine_status["message"])
+        print("Benchmark not run: install/configure a real OCR backend first.")
+        return 2
     cases=[('hard_clinic_note','Rx Paracetamol 500mg t.i.d.'),('hard_prescription','Rx Paracetamol 500mg t.i.d.')]
-    print('INKLENS ABLATION / SEEDED HARD-SAMPLE CHECK\n'+'='*48)
+    print(f'INKLENS SEEDED-SAMPLE CHECK / {p.engine_status["engine"]}\n'+'='*48)
     scores=[]
     for name,ref in cases:
         result=p.process(Image.open(root/'data'/(name+'.png')))
@@ -25,5 +29,6 @@ def main():
         print('  output:',hyp.replace('\n',' | '))
     print('='*48); print(f'Average seeded CER: {sum(scores)/len(scores):.2%}')
     print('Uncertainty policy: PASS (flagged regions are surfaced for human review)')
-    print('Note: install Tesseract and set DIGITIZER_USE_TESSERACT=1 to evaluate a real OCR engine on local scans.')
-if __name__=='__main__': main()
+    print('Note: these generated images are smoke-test fixtures, not a held-out handwriting benchmark.')
+    return 0
+if __name__=='__main__': raise SystemExit(main())

@@ -5,6 +5,7 @@ import base64
 import difflib
 import io
 import json
+import math
 import os
 import shutil
 import uuid
@@ -44,6 +45,11 @@ class ExtremeHandwritingPipeline:
             if shutil.which(pytesseract.pytesseract.tesseract_cmd):
                 self.tesseract = pytesseract
                 self.tesseract_available = True
+            else:
+                self.tesseract_error = (
+                    "Install the Tesseract OCR application and add it to PATH, "
+                    "or set TESSERACT_CMD."
+                )
         except ImportError:
             self.tesseract_error = "Install the optional pytesseract package."
 
@@ -67,9 +73,14 @@ class ExtremeHandwritingPipeline:
             "available": False,
             "engine": "OCR not configured",
             "remote": False,
-            "message": (
-                "Install Tesseract for local OCR or configure an opt-in vision API. "
-                "No image text will be guessed."
+            "message": " ".join(
+                filter(
+                    None,
+                    [
+                        self.tesseract_error,
+                        "Configure an opt-in vision API if needed. No image text will be guessed.",
+                    ],
+                )
             ),
         }
 
@@ -164,6 +175,8 @@ class ExtremeHandwritingPipeline:
         consensus = difflib.SequenceMatcher(
             None, " ".join(primary_text.split()), " ".join(secondary_text.split())
         ).ratio()
+        if not primary and secondary:
+            primary = secondary
         agrees = consensus >= 0.85
 
         regions = []
@@ -275,6 +288,8 @@ class ExtremeHandwritingPipeline:
                 if len(bbox) != 4:
                     raise ValueError
                 x, y, width, height = (float(value) for value in bbox)
+                if not all(math.isfinite(value) for value in (confidence, x, y, width, height)):
+                    raise ValueError
             except (TypeError, ValueError) as error:
                 raise RecognitionError(
                     "Vision API returned invalid confidence or bounding-box values."
@@ -292,10 +307,10 @@ class ExtremeHandwritingPipeline:
                     "text": item["text"],
                     "confidence": max(0.0, min(1.0, confidence)),
                     "bbox": [
-                        round(x * image.width / 1000),
-                        round(y * image.height / 1000),
-                        round(width * image.width / 1000),
-                        round(height * image.height / 1000),
+                        max(0, min(image.width, round(x * image.width / 1000))),
+                        max(0, min(image.height, round(y * image.height / 1000))),
+                        max(0, min(image.width, round(width * image.width / 1000))),
+                        max(0, min(image.height, round(height * image.height / 1000))),
                     ],
                     "region_type": region_type,
                     "uncertain": bool(item.get("uncertain", False)),
@@ -339,7 +354,7 @@ class ExtremeHandwritingPipeline:
             confidence = max(0.0, min(1.0, float(region["confidence"])))
             crossed_out = bool(region.get("crossed_out", False))
             uncertain = bool(region.get("uncertain", False))
-            flagged = uncertain or confidence < self.threshold
+            flagged = uncertain or confidence < self.threshold or text.startswith(FLAG)
             if crossed_out:
                 final_text = f"{FLAG} crossed-out text omitted"
             elif flagged and not text.startswith(FLAG):
